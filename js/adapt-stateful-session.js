@@ -108,7 +108,7 @@ define([
             });
         },
 
-        removeEventListeners: function () {
+        removeEventListeners: function() {
             $(window).off('beforeunload unload', this._onWindowUnload);
             this.stopListening();
         },
@@ -136,23 +136,25 @@ define([
             // The config allows the user to override the completion state.
             switch (completionData.status) {
                 case COMPLETION_STATE.COMPLETED:
-                case COMPLETION_STATE.PASSED: {
-                    if (!this._config._reporting._onTrackingCriteriaMet) {
-                        Adapt.log.warn("No value defined for '_onTrackingCriteriaMet', so defaulting to '" + completionStatus + "'");
-                    } else {
-                        completionStatus = this._config._reporting._onTrackingCriteriaMet;
+                case COMPLETION_STATE.PASSED:
+                    {
+                        if (!this._config._reporting._onTrackingCriteriaMet) {
+                            Adapt.log.warn("No value defined for '_onTrackingCriteriaMet', so defaulting to '" + completionStatus + "'");
+                        } else {
+                            completionStatus = this._config._reporting._onTrackingCriteriaMet;
+                        }
+
+                        break;
                     }
 
-                    break;
-                }
-
-                case COMPLETION_STATE.FAILED: {
-                    if (!this._config._reporting._onAssessmentFailure) {
-                        Adapt.log.warn("No value defined for '_onAssessmentFailure', so defaulting to '" + completionStatus + "'");
-                    } else {
-                        completionStatus = this._config._reporting._onAssessmentFailure;
+                case COMPLETION_STATE.FAILED:
+                    {
+                        if (!this._config._reporting._onAssessmentFailure) {
+                            Adapt.log.warn("No value defined for '_onAssessmentFailure', so defaulting to '" + completionStatus + "'");
+                        } else {
+                            completionStatus = this._config._reporting._onAssessmentFailure;
+                        }
                     }
-                }
             }
 
             Adapt.offlineStorage.set("status", completionStatus);
@@ -166,19 +168,49 @@ define([
             this.submitScore(stateModel);
         },
 
-        onQuestionRecordInteraction:function(questionView) {
+        onQuestionRecordInteraction: function(questionView) {
+
+            console.log("onQuestionRecordInteraction");
+
             var responseType = questionView.getResponseType();
 
             // If responseType doesn't contain any data, assume that the question
             // component hasn't been set up for cmi.interaction tracking
-            if(_.isEmpty(responseType)) return;
+            if (_.isEmpty(responseType)) return;
+
+            // Combine body and id separated by a pipe character and assign to the id variable
+            // This update is in order to supply additional data for the data analysis   
+            // id has a 255 character limit according to SCORM standard therefore truncate body if necessary
 
             var id = questionView.model.get('_id');
+            var questionText = questionView.model.get('body');
+
+            // If body is empty then instead capture the question title
+            if (questionText.length == 0) {
+                questionText = questionView.model.get('title');
+            }
+
+            // Remove any leading or trailing spaces
+            questionText = questionText.trim();
+
+            // Replace any spaces with underscores as SCORM 1.2 standard does not permit spaces
+            questionText.replace(/ /g, '_');
+
+            // Strip out HTML tags from questionText
+            // questionText = questionText.replace(/<\/?[^>]+(>|$)/g, "");
+
+            // Ensure length of questionText is within limits 
+            // The interactionsId property we are setting will be an amalgamation of
+            // the questionText and the id being the last 16 characters
+            // This string cannot exceed 255 characters (SCORM 1.2 standard)    
+
+            var interactionsId = questionText.substring(0, 255 - (id.length + 1)) + "|" + id;
+
             var response = questionView.getResponse();
             var result = questionView.isCorrect();
             var latency = questionView.getLatency();
 
-            Adapt.offlineStorage.set("interaction", id, response, result, latency, responseType);
+            Adapt.offlineStorage.set("interaction", interactionsId, response, result, latency, responseType);
         },
 
         /**
@@ -187,7 +219,7 @@ define([
          * - get and save a fresh copy of the session state. as the json has been reloaded, the blocks completion data will be reset (the user is warned that this will happen by the language picker extension)
          * - check to see if the config requires that the lesson_status be reset to 'incomplete'
          */
-        onLanguageChanged: function () {
+        onLanguageChanged: function() {
             this.reattachEventListeners();
 
             this.saveSessionState();
