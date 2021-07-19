@@ -242,7 +242,6 @@ define([
           }
 
           break;
->>>>>>> upstream/master
         }
         case COMPLETION_STATE.FAILED: {
           if (!config || !config._reporting || !config._reporting._onAssessmentFailure) {

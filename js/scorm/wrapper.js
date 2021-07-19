@@ -316,7 +316,7 @@ define([
       }));
     }
       
-    setSessionTime = function() {
+    setSessionTime() {
         
         this.endTime = new Date();
 
@@ -538,7 +538,7 @@ define([
         if (error.data.value === '') error.data.value = `''`;
       }
 
-      const config = Adapt.course.get('_spoor');
+      const config = Adapt.course.get('_elfh_spoor');
       const messages = Object.assign({}, ScormError.defaultMessages, config && config._messages);
       const message = Handlebars.compile(messages[error.name])(error.data);
 

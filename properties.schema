@@ -246,10 +246,10 @@
         "course": {
           "type":"object",
           "properties": {
-            "_spoor": {
+            "_elfh_spoor": {
               "type": "object",
               "required": false,
-              "legend": "Spoor (SCORM)",
+              "legend": "e-LfH Spoor",
               "properties": {
                 "_messages": {
                   "type": "object",
