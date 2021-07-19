@@ -1,7 +1,7 @@
 {
     "name": "adapt-elfh-spoor",
-    "version": "4.0.2",
-    "framework": ">=3",
+    "version": "5.0.0",
+    "framework": ">=5",
     "homepage": "https://github.com/e-LfH/adapt-elfh-spoor",
     "displayName": "e-LfH Spoor",
     "extension": "elfhSpoor",
@@ -14,3 +14,5 @@
     "license": "GPLv3",
     "targetAttribute": "_elfh_spoor"
 }
+
+
