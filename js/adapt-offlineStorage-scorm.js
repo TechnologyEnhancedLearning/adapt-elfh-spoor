@@ -122,7 +122,6 @@ define([
           Object.assign(this.temporaryStore, value);
         } else {
           this.temporaryStore[name] = value;
->>>>>>> upstream/master
         }
 
         return true;
