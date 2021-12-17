@@ -1,7 +1,8 @@
 {
     "name": "adapt-elfh-spoor",
+<<<<<<< HEAD
     "version": "5.0.0",
-    "framework": ">=5",
+    "framework": ">=5.17.8",
     "homepage": "https://github.com/e-LfH/adapt-elfh-spoor",
     "displayName": "e-LfH Spoor",
     "extension": "elfhSpoor",
