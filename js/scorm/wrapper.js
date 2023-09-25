@@ -6,6 +6,7 @@ import pipwerks from 'libraries/SCORM_API_wrapper';
 import Logger from './logger';
 import ScormError from './error';
 import Connection from './Connection';
+import aiccAPI from 'libraries/aiccAPI';
 
 const {
   CLIENT_COULD_NOT_CONNECT,
@@ -78,6 +79,7 @@ class ScormWrapper {
     this.finishCalled = false;
     this.logger = Logger.getInstance();
     this.scorm = pipwerks.SCORM;
+    this.aicc = aiccAPI.AICC;
     /**
      * Prevent the Pipwerks SCORM API wrapper's handling of the exit status
      */
@@ -149,7 +151,13 @@ class ScormWrapper {
     }
 
     this.logger.debug('ScormWrapper::initialize');
-    this.lmsConnected = this.scorm.init();
+
+    if (this.aicc.init()) {
+      this.scorm = this.aicc;
+      this.lmsConnected = true;
+    } else {
+      this.lmsConnected = this.scorm.init();
+    }
 
     if (!this.lmsConnected) {
       this.handleInitializeError();
@@ -446,18 +454,6 @@ class ScormWrapper {
       return;
     }
 
-    setSessionTime() {
-
-        this.endTime = new Date();
-
-        if (this.isSCORM2004()) {
-            this.setValue("cmi.session_time", this.convertToSCORM2004Time(this.endTime.getTime() - this.startTime.getTime()));
-        } else {
-            this.setValue("cmi.core.session_time", this.convertToSCORM12Time(this.endTime.getTime() - this.startTime.getTime()));
-
-        }
-    }
-
     const value = this.scorm.get(property);
     const errorCode = this.scorm.debug.getCode();
 
@@ -596,7 +592,7 @@ class ScormWrapper {
       if (error.data.value === '') error.data.value = '\'\'';
     }
 
-    const config = Adapt.course.get('_spoor');
+    const config = Adapt.course.get('_elfh_spoor');
     const messages = Object.assign({}, ScormError.defaultMessages, config && config._messages);
     const message = Handlebars.compile(messages[error.name])(error.data);
 
