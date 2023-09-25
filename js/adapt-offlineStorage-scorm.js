@@ -193,7 +193,7 @@ export default class OfflineStorageScorm extends Backbone.Controller {
   }
 
   useTemporaryStore() {
-    const cfg = Adapt.config.get('_spoor');
+    const cfg = Adapt.config.get('_elfh_spoor');
 
     if (!this.scorm.lmsConnected || (cfg?._isEnabled === false)) return true;
     return false;

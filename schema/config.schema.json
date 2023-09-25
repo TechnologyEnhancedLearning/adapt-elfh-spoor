@@ -8,7 +8,7 @@
     },
     "with": {
       "properties": {
-        "_spoor": {
+        "_elfh_spoor": {
           "type": "object",
           "title": "Spoor (SCORM)",
           "default": {},

@@ -15,7 +15,7 @@ class Spoor extends Backbone.Controller {
   }
 
   _prepare() {
-    this.config = Adapt.config.get('_spoor');
+    this.config = Adapt.config.get('_elfh_spoor');
     if (!this.isEnabled) {
       offlineStorage.setReadyStatus();
       return;
