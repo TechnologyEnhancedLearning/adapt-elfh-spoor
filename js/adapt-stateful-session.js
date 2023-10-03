@@ -190,7 +190,7 @@ export default class StatefulSession extends Backbone.Controller {
     questionText = questionText.trim();
 
     // Replace any spaces with underscores as SCORM 1.2 standard does not permit spaces
-    questionText = questionText.replace(/ /g, '_');
+    questionText = questionText.replace(/[\s\u00A0]+/g, '_');
 
     // Strip out HTML tags from questionText
     questionText = questionText.replace(/<\/?[^>]+(>|$)/g, "");
