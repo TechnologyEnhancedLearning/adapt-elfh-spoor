@@ -195,6 +195,10 @@ export default class StatefulSession extends Backbone.Controller {
     // Strip out HTML tags from questionText
     questionText = questionText.replace(/<\/?[^>]+(>|$)/g, "");
 
+    // Strip out any characters that are not letters, digits or underscores
+
+    questionText = questionText.replace(/[^\w\s]/g, "");
+
 
     // Ensure length of questionText is within limits
     // The interactionsId property we are setting will be an amalgamation of
