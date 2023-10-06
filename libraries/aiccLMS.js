@@ -101,44 +101,39 @@ function AICC_LMS() {
       const re = /^\[(\w+)\]$/m;
       let aiccSection = "none";
 
-      for (let x in lines) {
-        console.log("####"+lines[x]+"##");
+      for (let x in lines){
         let line = lines[x];
-        if (line.search(re) > -1) {                                 //single line section eg [Student_Data]
-            console.log(line);
-            console.log(line.replace(re,"$1"));
-            aiccSection = line.replace(re,"$1").toLowerCase();      //set value for current aiccSeciton
-            console.log("**"+aiccSection);
-        } else if (line.search("=") > -1) {                         //key=value pair
+        if (line.search(re) > -1){
+            aiccSection = line.replace(re,"$1").toLowerCase();
+        } else if (line.search("=") > -1){
           let elements = line.split("=");
           let key = elements[0].trim().toLowerCase();
           let value = elements[1].trim();
-
-          if (value.length > 0) {
-            console.log("+"+value+"+");
-            if (value.search(re) > -1) {                            //value is in []s probably aicc_data=[Core]
-              console.log("FOUND HIM");
-              aiccSection = value.replace(re,"$1").toLowerCase(); //set value for current aiccSection
-              console.log("**"+aiccSection);
+          if (value == undefined || value == null){
+            value = '';
+          }
+          if (value.length > 0 || value === ''){
+            if (value.search(re) > -1){
+              aiccSection = value.replace(re,"$1").toLowerCase();
             } else {
-              switch (aiccSection) {
-                case "none":                                    //opening section
-                  if (key == "error") {
+              switch (aiccSection){
+                case "none":
+                  if (key == "error"){
                     self.LmsResponseError = parseInt(value, 10);
-                  } else if (key == "error_text") {
+                  } else if (key == "error_text"){
                     self.LmsResponseErrorText = value;
                   }
                   break;
                 case "core":
-                  if (key == "student_id") {
+                  if (key == "student_id"){
                     self.StudentId = value;
-                  } else if (key == "student_name") {
+                  } else if (key == "student_name"){
                     self.StudentName = value;
-                  } else if (key == "lesson_location") {
+                  } else if (key == "lesson_location"){
                     self.LessonLocation = value;
                   } else if (key == "lesson_status") {
                     // this contains a comma, then this field contains both the lesson_status and the core.entry value
-                    // otherwise it contains on the lesson_status
+                    // otherwise it contains only the lesson_status
                     if (value.indexOf(",") > -1) {
                       // split up lesson status and entry value
                       let temp = value.split(",");
@@ -149,7 +144,7 @@ function AICC_LMS() {
                     }
                   } else if (key == "score") {
                       if (value == "") {
-                          self.Score = 0;
+                          self.Score = "";
                       } else {
                           self.Score = parseInt(value, 10);
                       }
