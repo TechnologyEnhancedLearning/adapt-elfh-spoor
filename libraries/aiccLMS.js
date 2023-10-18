@@ -104,7 +104,8 @@ function AICC_LMS() {
       for (let x in lines){
         let line = lines[x];
         if (line.search(re) > -1){
-            aiccSection = line.replace(re,"$1").toLowerCase();
+            aiccSection = line.replace(re, "$1").toLowerCase();
+            aiccSection = aiccSection.trim();
         } else if (line.search("=") > -1){
           let elements = line.split("=");
           let key = elements[0].trim().toLowerCase();
@@ -114,7 +115,8 @@ function AICC_LMS() {
           }
           if (value.length > 0 || value === ''){
             if (value.search(re) > -1){
-              aiccSection = value.replace(re,"$1").toLowerCase();
+                aiccSection = value.replace(re, "$1").toLowerCase();
+                aiccSection = aiccSection.trim();
             } else {
               switch (aiccSection){
                 case "none":
