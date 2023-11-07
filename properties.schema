@@ -266,7 +266,7 @@
                       "properties": {
                         "_isEnabled": {
                           "type": "boolean",
-                          "default": true,
+                          "default": false,
                           "title": "Is Enabled",
                           "inputType": "Checkbox",
                           "validators": [],
@@ -274,7 +274,7 @@
                         },
                         "_testOnSetValue": {
                           "type": "boolean",
-                          "default": true,
+                          "default": false,
                           "title": "Test on set value",
                           "inputType": "Checkbox",
                           "validators": [],
