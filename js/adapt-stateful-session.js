@@ -171,6 +171,10 @@ export default class StatefulSession extends Backbone.Controller {
 
   onQuestionRecordInteraction(questionView) {
     if (!this._shouldRecordInteractions) return;
+    if (!this.scorm.isSupported('cmi.interactions._count')) {
+      console.log("recordInteraction: cmi.interactions are not supported by this LMS");
+      return;
+    }
     // View functions are deprecated: getResponseType, getResponse, isCorrect, getLatency
     const questionModel = questionView.model;
     const responseType = (questionModel.getResponseType ? questionModel.getResponseType() : questionView.getResponseType());
