@@ -4,7 +4,7 @@
 //*********************************************
 //**
 //** 30 July 2017   Ian Robinson  Class changed from e-LfH original to accomodate integration with the Adapt framwework and the file aicc-api.js which replaces the normal Adapt API.js file.
-//**                              Added self.ExitValue property and assignment  to cmi.core.exit in LMSSetValue.  
+//**                              Added self.ExitValue property and assignment  to cmi.core.exit in LMSSetValue.
 //**
 //*********************************************
 function AICC_LMS() {
@@ -15,7 +15,7 @@ function AICC_LMS() {
 
     self.Id = "";
     self.LmsUrl = "";
-    self.Version = "4.1"; // aicc version started at 4.1
+    self.Version = "4.0";
     self.LmsResponse = "";
     self.SuspendData = "";
     self.MasteryScore = 0;
@@ -31,7 +31,7 @@ function AICC_LMS() {
     self.LmsResponseError = 0;
     self.LmsResponseErrorText = "";
 
-    self.Reset = function() {
+    self.Reset = function () {
         self.Id = "";
         self.LmsUrl = "";
         self.LmsResponse = "";
@@ -48,7 +48,7 @@ function AICC_LMS() {
         self.TotalTime = 0;
     };
 
-    self.LMSInitialize = function() {
+    self.LMSInitialize = function () {
 
         var result = false;
 
@@ -57,35 +57,37 @@ function AICC_LMS() {
             var sSend = "command=GetParam&version=" + escape(self.Version) + "&session_id=" + escape(self.Id);
 
             $.ajax({
-                    method: "POST",
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded'
-                    },
-                    async: false,
-                    url: self.LmsUrl,
-                    data: sSend
-                })
-                .fail(function(jqXHR, textStatus) {
+                method: "POST",
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                async: false,
+                url: self.LmsUrl,
+                data: sSend
+            })
+            .fail(function (jqXHR, textStatus) {
 
-                    throw { message: "Failed to initiate AICC LMS object. " + jqXHR.statusText };
+                throw { message: "Failed to initiate AICC LMS object. " + jqXHR.statusText };
 
-                })
-                .done(function(response) {
+            })
+            .done(function (response) {
 
-                    // response from LMS, i.e. error_text=Successful if connected, student id, name, lesson location etc.
-                    self.ProcessResponse(response);
+                // response from LMS, i.e. error_text=Successful if connected, student id, name, lesson location etc.
+                self.ProcessResponse(response);
 
-                    // IR 06 July 2016 - added additional check for Rustici SCORM engine, which doesn't return 'successful' in the response error text, but 
-                    // returns a zero error code only
-                    if (self.LmsResponseErrorText.toLowerCase() == "successful" || (self.LmsResponseErrorText.toLowerCase() == "" && self.LmsResponseError == 0)) {
-                        self.Connected = true;
-                        result = true;
+                // IR 06 July 2016 - added additional check for Rustici SCORM engine, which doesn't return 'successful' in the response error text, but
+                // returns a zero error code only
+                if (self.LmsResponseErrorText.toLowerCase() == "successful" || (self.LmsResponseErrorText.toLowerCase() == "" && self.LmsResponseError == 0))
+                {
+                    self.Connected = true;
+                    result = true;
 
-                    }
+                }
 
-                });
+            });
 
-        } catch (e) {
+        }
+        catch (e) {
 
             throw e;
         }
@@ -93,163 +95,81 @@ function AICC_LMS() {
         return result;
     };
 
-    self.ProcessResponse = function(sResponse) {
+  self.ProcessResponse = function (sResponse) {
 
-        var sCRLF = String.fromCharCode(13, 10);
-        var sCR = String.fromCharCode(10);
+      const lines = sResponse.split("\n");
+      const re = /^\[(\w+)\]$/m;
+      let aiccSection = "none";
 
-        var sSrc = unescape(sResponse);
-
-        // Remove comments
-        sSrc = sSrc.replace(/^;.*$/gm, "");
-        var re = /\[(\w+)\]$/m; // Changed by PS 19/1/2021 to remove check for [group] to be at beginning of a line
-        var sNameSeparator = " ";
-
-        var pGroups = null;
-
-        for (;;) {
-            if (sSrc.length == 0)
-                break;
-
-            // Locate the position of the start of the second [group] to enable processing the first group i.e [core]
-            var nFirstGroupBegin = sSrc.search(re);
-            var nSecondSearchSrc = sSrc.substr(nFirstGroupBegin + 1);
-
-            var nGroupBegin = nSecondSearchSrc.search(re) + (nFirstGroupBegin) + 1;
-
-            //top section i.e [core]
-            var top_section = sSrc.substr(0, nGroupBegin - 1);
-            var elements = top_section.split(sCR);
-
-            for (var i = 0; i < elements.length; i++) {
-
-                var element = elements[i].split("=");
-
-                if (element.length == 2 && element[1].length > 0) {
-
-                    var key = element[0].toLowerCase();
-                    var value = element[1].replace(/^\s+|\s+$/g, '');
-
-                    if (value == undefined || value == null) {
-                        value = '';
+      for (let x in lines){
+        let line = lines[x];
+        if (line.search(re) > -1){
+            aiccSection = line.replace(re, "$1").toLowerCase();
+            aiccSection = aiccSection.trim();
+        } else if (line.search("=") > -1){
+          let elements = line.split("=");
+          let key = elements[0].trim().toLowerCase();
+          let value = elements[1].trim();
+          if (value == undefined || value == null){
+            value = '';
+          }
+          if (value.length > 0 || value === ''){
+            if (value.search(re) > -1){
+                aiccSection = value.replace(re, "$1").toLowerCase();
+                aiccSection = aiccSection.trim();
+            } else {
+              switch (aiccSection){
+                case "none":
+                  if (key == "error"){
+                    self.LmsResponseError = parseInt(value, 10);
+                  } else if (key == "error_text"){
+                    self.LmsResponseErrorText = value;
+                  }
+                  break;
+                case "core":
+                  if (key == "student_id"){
+                    self.StudentId = value;
+                  } else if (key == "student_name"){
+                    self.StudentName = value;
+                  } else if (key == "lesson_location"){
+                    self.LessonLocation = value;
+                  } else if (key == "lesson_status") {
+                    // this contains a comma, then this field contains both the lesson_status and the core.entry value
+                    // otherwise it contains only the lesson_status
+                    if (value.indexOf(",") > -1) {
+                      // split up lesson status and entry value
+                      let temp = value.split(",");
+                      self.LessonStatus = self.UnAbbreviateCompletionStatus(temp[0]);
+                      self.EntryValue = self.UnAbbreviateEntry(temp[1]);
+                    } else {
+                      self.LessonStatus = self.UnAbbreviateCompletionStatus(value);
                     }
-
-                    if (key == "error") {
-                        self.LmsResponseError = value;
-                    } else if (key == "error_text") {
-                        self.LmsResponseErrorText = value;
-                    } else if (key == "student_id") {
-                        self.StudentId = value;
-                    } else if (key == "student_name") {
-                        self.StudentName = value;
-                    } else if (key == "lesson_location") {
-                        self.LessonLocation = value;
-                    } else if (key == "lesson_status") {
-
-
-                        // this contains a comma, then this field contains both the lesson_status and the core.entry value
-                        // otherwise it contains on the lesson_status
-                        if (value.indexOf(",") > -1) {
-                            // split up lesson status and entry value
-                            var temp = value.split(",");
-
-                            self.LessonStatus = self.UnAbbreviateCompletionStatus(temp[0]);
-                            self.EntryValue = self.UnAbbreviateEntry(temp[1]);
-
-                        } else {
-                            self.LessonStatus = self.UnAbbreviateCompletionStatus(value);
-                        }
-                    } else if (key == "score") {
-
-                        if (value == '') {
-                            self.Score = '';
-                        } else {
-                            self.Score = parseInt(value, 10);
-                        }
-
-                    } else if (key == "time") {
-                        self.TotalTime = value;
-                    }
-
-                }
-
-            };
-
-            // bottom section
-            sSrc = sSrc.substr(nGroupBegin);
-
-            var sGroup = sSrc.replace(re, "$1" + sNameSeparator);
-            var sGroupName = sGroup.substr(0, sGroup.search(sNameSeparator));
-            sGroup = sGroup.substr(sGroupName.length + 1);
-
-            var nNextGroupBegin = sGroup.search(re);
-            if (nNextGroupBegin == -1)
-                nNextGroupBegin = sGroup.length;
-
-            sSrc = sGroup.substr(nNextGroupBegin);
-            sGroup = sGroup.substr(0, nNextGroupBegin);
-
-            // Remove extra line breaks
-            sGroup = sGroup.replace(/[\n\r]+/gm, sCR);
-            sGroup = sGroup.replace(/^[\n]+/gm, "");
-
-            var oGroup = new Object;
-            oGroup.sName = sGroupName.toLowerCase();
-            oGroup.arVars = sGroup.split(sCR);
-            oGroup.pNext = pGroups;
-            pGroups = oGroup;
-        }
-
-        for (var oGroup = pGroups; oGroup != null; oGroup = oGroup.pNext) {
-            for (var i = 0; i < oGroup.arVars.length; i++) {
-                var sPair = oGroup.arVars[i];
-                if (sPair.length > 0) {
-
-                    var nBegin = sPair.search("=");
-                    var sName = sPair.substring(0, nBegin);
-                    var sValue = sPair.substring(nBegin + 1);
-
-                    sName = sName.toLowerCase();
-
-                    if (oGroup.sName == "core") {
-                        switch (sName) {
-                            case "lesson_status":
-                                {
-
-                                    sValue = sValue.toLowerCase();
-                                    var arValues = sValue.split(",");
-
-                                    self.LessonStatus = arValues[0];
-
-                                    /*  IR - entry value isn't needed for aicc sessions.
-                                    var sFlag = "r";
-                                    if (arValues.length > 1)
-                                        sFlag = arValues[1];
-        
-                                    if (sFlag == "r" || sFlag == "resume")
-                                        g_sLmsCmiEntry = "resume";
-                                    */
-                                    break;
-                                }
-
-                        }
-                    } else if (oGroup.sName == "core_lesson") {
-                        switch (sName) {
-                            case "suspend_data":
-                                self.SuspendData = sValue;
-                                break;
-                        }
-                    } else if (oGroup.sName == "student_data") {
-                        switch (sName) {
-                            case "mastery_score":
-                                self.MasteryScore = sValue;
-                                break;
-                        }
-                    }
-                }
+                  } else if (key == "score") {
+                      if (value == "") {
+                          self.Score = "";
+                      } else {
+                          self.Score = parseInt(value, 10);
+                      }
+                  } else if (key == "time") {
+                      self.TotalTime = parseFloat(value);
+                  }
+                  break;
+                case "core_lesson":
+                  if (key == "suspend_data") {
+                    self.SuspendData = value;
+                  }
+                  break;
+                case "student_data":
+                  if (key == "mastery_score") {
+                      self.MasteryScore = value;
+                  }
+                  break;
+              }
             }
+          }
         }
-    };
+      }
+    }
 
     self.UnAbbreviateEntry = function(s) {
 
@@ -301,9 +221,9 @@ function AICC_LMS() {
         return status;
     };
 
-    self.PrepareData = function() {
+    self.PrepareData = function () {
 
-        var sCRLF = String.fromCharCode(13, 10);
+        var sCRLF = String.fromCharCode(13,10);
 
         var sData = "";
 
@@ -324,7 +244,7 @@ function AICC_LMS() {
 
     };
 
-    self.LMSFinish = function() {
+    self.LMSFinish = function () {
 
         var result = false;
 
@@ -350,68 +270,72 @@ function AICC_LMS() {
                 var exitData = "command=ExitAU&version=" + escape(self.Version) + "&session_id=" + escape(self.Id);
 
                 $.ajax({ // send the exit / finish command to the LMS via the hub
-                        method: "POST",
-                        async: false,
-                        url: self.LmsUrl,
-                        headers: {
-                            'Content-Type': 'application/x-www-form-urlencoded'
-                        },
-                        data: exitData
-                    })
-                    .fail(function(jqXHR, textStatus) {
-                        var error = new SCORM_Error(SCORM_Error_Enum.CONST_LMSFinish_ERROR, "Error disconnecting from AICC LMS: " + jqXHR.statusText);
-                        alert(error.message);
-                        throw error;
-                    })
-                    .done(function(response) {
-                        self.Reset();
-                        self.Connected = false;
-                        result = true;
-                    });
+                    method: "POST",
+                    async: false,
+                    url: self.LmsUrl,
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    data: exitData
+                })
+                .fail(function (jqXHR, textStatus) {
+                    var error = new SCORM_Error(SCORM_Error_Enum.CONST_LMSFinish_ERROR, "Error disconnecting from AICC LMS: " + jqXHR.statusText);
+                    alert(error.message);
+                    throw error;
+                })
+                .done(function (response) {
+                    self.Reset();
+                    self.Connected = false;
+                    result = true;
+                });
 
 
             }
 
-        } catch (e) {
+        }
+        catch (e) {
             throw e;
         }
 
         return result;
     };
 
-    self.LMSCommit = function() {
+    self.LMSCommit = function () {
 
         var result = false;
 
-        try {
+        try
+        {
             var sAiccData = self.PrepareData();
             var sSend = "command=PutParam&version=" + escape(self.Version) + "&session_id=" + escape(self.Id) + "&AICC_Data=" + escape(sAiccData);
 
             $.ajax({
-                    method: "POST",
-                    async: false,
-                    headers: {
+                method: "POST",
+                async: false,
+                headers: {
                         'Content-Type': 'application/x-www-form-urlencoded'
-                    },
-                    url: self.LmsUrl,
-                    data: sSend
-                })
-                .fail(function(jqXHR, textStatus) {
-                    var error = new SCORM_Error(SCORM_Error_Enum.CONST_LMSCommit_ERROR, "Error saving data to AICC LMS: " + jqXHR.statusText);
-                    alert(error.message);
-                    throw error;
-                })
-                .done(function(response) {
+            },
+            url: self.LmsUrl,
+            data: sSend
+            })
+            .fail(function(jqXHR, textStatus) {
+                var error = new SCORM_Error(SCORM_Error_Enum.CONST_LMSCommit_ERROR, "Error saving data to AICC LMS: " + jqXHR.statusText);
+                alert(error.message);
+                throw error;
+            })
+            .done(function( response ) {
 
-                    self.LmsResponse = response;
+                self.LmsResponse = response;
 
-                    self.ProcessResponse(response);
+                self.ProcessResponse(response);
 
 
-                    result = true;
-                });
+                result = true;
+            });
 
-        } catch (e) {
+        }
+        catch (e)
+        {
             throw e;
         }
 
@@ -419,7 +343,7 @@ function AICC_LMS() {
 
     };
 
-    self.LMSSetValue = function(key, value) {
+    self.LMSSetValue = function (key, value) {
 
         try {
 
@@ -469,7 +393,7 @@ function AICC_LMS() {
         return false;
     };
 
-    self.LMSGetValue = function(key) {
+    self.LMSGetValue = function (key) {
 
         try {
 
@@ -530,12 +454,12 @@ function AICC_LMS() {
     };
 
 
-    self.LMSGetLastError = function(parameter) {
+    self.LMSGetLastError = function (parameter) {
         return self.LmsResponseError;
     };
 
 
-    self.LMSGetErrorString = function(parameter) {
+    self.LMSGetErrorString = function (parameter) {
 
         return self.LmsResponseErrorText;
     };
