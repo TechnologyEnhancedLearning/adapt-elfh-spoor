@@ -338,6 +338,8 @@ class ScormWrapper {
       return;
     }
 
+    this.setSessionTime();
+
     if (this.scorm.save()) {
       this.commitRetries = 0;
       this.lastCommitSuccessTime = new Date();
@@ -359,6 +361,15 @@ class ScormWrapper {
       errorInfo: this.scorm.debug.getInfo(errorCode),
       diagnosticInfo: this.scorm.debug.getDiagnosticInfo(errorCode)
     }));
+  }
+
+  setSessionTime() {
+    this.endTime = new Date();
+    if (this.isSCORM2004()) {
+      this.scorm.set('cmi.session_time', this.convertToSCORM2004Time(this.endTime.getTime() - this.startTime.getTime()));
+    } else {
+      this.scorm.set('cmi.core.session_time', this.convertToSCORM12Time(this.endTime.getTime() - this.startTime.getTime()));
+    }
   }
 
   finish() {
