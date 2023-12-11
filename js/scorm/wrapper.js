@@ -604,7 +604,9 @@ class ScormWrapper {
     }
 
     const config = Adapt.course.get('_elfh_spoor');
-    const messages = Object.assign({}, ScormError.defaultMessages, config && config._messages);
+    const defaultMessages = ScormError.defaultMessages;
+    const configMessages = config?.['_messages'] || {};
+    const messages = Object.assign({}, defaultMessages, configMessages);
     const message = Handlebars.compile(messages[error.name])(error.data);
 
     switch (error.name) {
