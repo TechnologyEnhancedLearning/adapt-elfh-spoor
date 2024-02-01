@@ -603,8 +603,8 @@ class ScormWrapper {
       if (error.data.value === '') error.data.value = '\'\'';
     }
 
-    const config = Adapt.course.get('_elfh_spoor');
-    const messages = Object.assign({}, ScormError.defaultMessages, config && config._messages);
+    const defaultMessages = ScormError.defaultMessages;
+    const messages = Object.assign({}, defaultMessages);
     const message = Handlebars.compile(messages[error.name])(error.data);
 
     switch (error.name) {
