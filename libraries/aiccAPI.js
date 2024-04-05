@@ -702,13 +702,13 @@ define([
 
 
         var aicc = elfh.AICC,
-            API = scorm.API.getHandle(),
+            API = aicc.API.getHandle(),
             trace = pipwerks.UTILS.trace,
             result = "";
 
         if (API) {
 
-            switch (scorm.version) {
+            switch (aicc.version) {
                 case "aicc":
                     result = "";
                     break;
