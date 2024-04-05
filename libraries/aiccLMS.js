@@ -24,8 +24,8 @@ function AICC_LMS() {
     self.Score = 0;
     self.StudentId = 0;
     self.StudentName = "";
-    self.TotalTime = 0;
-    self.SessionTime = 0;
+    self.TotalTime = "00:00:00";
+    self.SessionTime = "00:00:00";
     self.EntryValue = "";
     self.ExitValue = "";
     self.LmsResponseError = 0;
@@ -44,8 +44,8 @@ function AICC_LMS() {
         self.Score = 0;
         self.StudentId = 0;
         self.StudentName = "";
-        self.SessionTime = 0;
-        self.TotalTime = 0;
+        self.SessionTime = "00:00:00";
+        self.TotalTime = "00:00:00";
     };
 
     self.LMSInitialize = function () {
@@ -151,7 +151,7 @@ function AICC_LMS() {
                           self.Score = parseInt(value, 10);
                       }
                   } else if (key == "time") {
-                      self.TotalTime = parseFloat(value);
+                      self.TotalTime = value;
                   }
                   break;
                 case "core_lesson":
